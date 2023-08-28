@@ -2,7 +2,7 @@
 Repozitář se základem (kostrou kódů) k řešení v rámci letního robotického kempu Campo Lampone 2023. Účastníci jsou rozděleni do týmů. Každý tým plní úlohu zvlášť jako celek. Sami si pak mezi sebou v týmu rozdělí podúlohy. 
 
 ## Popis úlohy
-Pracovním prostorem úlohy je plachta s bílým pozadím a černou mřížku s 10 x 10 buňkami o velikosti 200 x 200 mm s tloušťkou čáry 20 mm (TODO: verify). Nad touto plachtou je uchycena kamera tak, aby snímala celou plachtu. Na plachtě jsou rozmístěny objekty, které symbolizují cílový bod a překážky. Na počátku úlohy je na náhodnou buňku mřížky umístěn pohyblivý robot. Cílem úlohy je ovládat robota tak, aby co nejkratší cestou dojel do cílové buňky, aniž by po cestě projel buňkou označenou jako překážka.
+Pracovním prostorem úlohy je plachta s bílým pozadím a černou mřížku s 8 x 8 buňkami o velikosti 250 x 250 mm s tloušťkou čáry 25 mm. Nad touto plachtou je uchycena kamera tak, aby snímala celou plachtu. Na plachtě jsou rozmístěny objekty, které symbolizují cílový bod a překážky. Na počátku úlohy je na náhodnou buňku mřížky umístěn pohyblivý robot. Cílem úlohy je ovládat robota tak, aby co nejkratší cestou dojel do cílové buňky, aniž by po cestě projel buňkou označenou jako překážka.
 
 # Možné varianty úlohy
 - Robot se snaží dostat do cíle a při tom se vyhnout překážkám
@@ -12,7 +12,7 @@ Pracovním prostorem úlohy je plachta s bílým pozadím a černou mřížku s 
 - Přidané bodované objekty
 
 ## Rozbor řešení úlohy
-Celková úloha se dělí na několik podúloh. Tyto podúlohy si členové týmu rozdělí podle svých schopností a znalostí. (TODO: ohodnotit obtížnost podúloh?). Řešení jednotlivých podúloh doplňují do připravené kostry `base_solution.py`. Formátu vstupů a výstupů jednotlivých podúloh záleží na domluvě mezi příslušnými částmi týmů (TODO: jo?).
+Celková úloha se dělí na několik podúloh. Tyto podúlohy si členové týmu rozdělí podle svých schopností a znalostí. Řešení jednotlivých podúloh doplňují do připravené kostry `base_solution.py`. Formátu vstupů a výstupů jednotlivých podúloh záleží na domluvě mezi příslušnými částmi týmů!
 
 Kamera má dostatečné rozlišení tak, aby bylo z obrazu možné detekovat objekty v mřížce. Robot je zeshora osazen ArUCo kódem, který usnadní detekci jeho pozice a natočení. Objekty reprezentující překážku, cíl, ... jsou vyrobeny z tenkého materiálu (papír) s barvou odlišnou pozadí a mřížce. Cílem týmu je odeslat na vyhoodnocovací server posloupnost příkazů, kterými se robot musí řídit aby se dostal do cíle.
 
