@@ -9,7 +9,7 @@ class BaseSolution:
         # Nacteni jednoho snimku ze serveru 
         pass
 
-    def detect_playgrond(self):
+    def detect_playground(self):
         # Detekce hriste z nacteneho snimku
         pass
 
@@ -35,7 +35,7 @@ class BaseSolution:
 
     def solve(self):
         self.load_frame()
-        self.detect_playgrond()
+        self.detect_playground()
         self.detect_robot()
         self.recognize_objects()
         self.analyze_playground()
