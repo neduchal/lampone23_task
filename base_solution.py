@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import urllib
 from skimage import transform, data, io
-
+import math
 
 class BaseSolution:
 
@@ -16,7 +16,7 @@ class BaseSolution:
         # Load the fisheye-distorted image
         # https://i.ibb.co/d7Wgk4B/image.png
         # https://i.ibb.co/sKp0Z6g/image.png
-        image = io.imread("https://i.ibb.co/d7Wgk4B/image.png")
+        image = io.imread("http://192.168.100.22/image/image.png")
 
         im_res = cv2.resize(image, (1920, 1440))
 
@@ -85,12 +85,13 @@ class BaseSolution:
 
         front = None
 
-        if markerCorners != None: # If there are any corners make a bounding polygon
+        if markerCorners != []: # If there are any corners make a bounding polygon
             front = corners[0][0]
             cv2.polylines(image,corners,True,(255,0,0),2)
             vector = [front[0][0]-front[1][0], front[0][1]-front[1][1]]
             vector_perpendicular = [-vector[1],vector[0]]
-            print(f"Vector: {vector}, Perpendicular: {vector_perpendicular}")
+            angle = math.atan2(vector_perpendicular[0],vector_perpendicular[1]) * 180 / math.pi
+            print(f"Vector: {vector}, Perpendicular: {vector_perpendicular}, Angle: {angle}")
             cv2.line(image, front[0], front[0]-vector, (0,255,0), 10)
             cv2.line(image, front[0], front[0]-vector_perpendicular, (0,0,255), 10)
 
@@ -121,8 +122,8 @@ class BaseSolution:
 
     def solve(self):
         image = self.load_frame()
-        self.detect_playground()
-        self.detect_robot(image)
+        fixed_image = self.detect_playground(image)
+        self.detect_robot(fixed_image)
         self.recognize_objects()
         self.analyze_playground()
         self.generate_path()
