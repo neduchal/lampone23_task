@@ -16,7 +16,13 @@ class BaseSolution:
         # Load the fisheye-distorted image
         # https://i.ibb.co/d7Wgk4B/image.png
         # https://i.ibb.co/sKp0Z6g/image.png
-        image = io.imread("http://192.168.100.22/image/image.png")
+        while True:
+            try:
+                image = io.imread("http://192.168.100.22/image/image.png")
+
+                break  # Only triggered if input is valid...
+            except ValueError as error:
+                print(error)
 
         im_res = cv2.resize(image, (1920, 1440))
 
@@ -69,6 +75,13 @@ class BaseSolution:
 
         M = cv2.getPerspectiveTransform(src_pts, dst_pts)
         warp = cv2.warpPerspective(image, M, (1000, 1000))
+
+        centers = np.zeros((8,8))
+        for i, x in enumerate(range(100, 900, 100)):
+            for j, y in enumerate(range(100, 900, 100)):
+                centers[i,j] = (x, y)
+
+        print(centers)
 
         return warp
 
