@@ -81,9 +81,22 @@ class BaseSolution:
         # Detekce hriste z nacteneho snimku
         pass
 
-    def detect_robot(self):
-        # Detekce robota [ArUCo tag]
-        pass
+    def detect_robot(self, image):
+        dictionary = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_50)
+        parameters =  cv2.aruco.DetectorParameters()
+        detector = cv2.aruco.ArucoDetector(dictionary, parameters) # Prepare the CV2 aruco detector object
+
+        image_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY) # Convert a color image to grayscale
+
+        markerCorners, markerIds, rejectedCandidates = detector.detectMarkers(image_gray) # Detect the aruco markers from the grayscale image
+        
+        corners = np.array(markerCorners, np.int32) # Convert markerCorners to a numpy array with type np.int32
+
+        if markerCorners != None: # If there are any corners make a bounding polygon
+            cv2.polylines(image,pts,True,(255,0,0),2)
+
+        #print(f"Corners: {markerCorners}, IDs: {markerIds}") # Was for debug, best to keep it here
+        return corners, image
 
     def recognize_objects(self):
         # Rozpoznani objektu na hristi - cil, body, prekazky
