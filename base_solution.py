@@ -83,10 +83,24 @@ class BaseSolution:
         
         corners = np.array(markerCorners, np.int32) # Convert markerCorners to a numpy array with type np.int32
 
-        if markerCorners != None: # If there are any corners make a bounding polygon
-            cv2.polylines(image,pts,True,(255,0,0),2)
+        front = None
 
-        #print(f"Corners: {markerCorners}, IDs: {markerIds}") # Was for debug, best to keep it here
+        if markerCorners != None: # If there are any corners make a bounding polygon
+            front = corners[0][0]
+            cv2.polylines(image,corners,True,(255,0,0),2)
+            vector = [front[0][0]-front[1][0], front[0][1]-front[1][1]]
+            vector_perpendicular = [-vector[1],vector[0]]
+            print(f"Vector: {vector}, Perpendicular: {vector_perpendicular}")
+            cv2.line(image, front[0], front[0]-vector, (0,255,0), 10)
+            cv2.line(image, front[0], front[0]-vector_perpendicular, (0,0,255), 10)
+
+
+        #print(f"Corners: {corners}, IDs: {markerIds}, Main line: {front}") # Was for debug, best to keep it here
+
+        imgplot = plt.imshow(image)
+
+        plt.show()
+        
         return corners, image
 
     def recognize_objects(self):
@@ -106,9 +120,9 @@ class BaseSolution:
         pass
 
     def solve(self):
-        self.load_frame()
+        image = self.load_frame()
         self.detect_playground()
-        self.detect_robot()
+        self.detect_robot(image)
         self.recognize_objects()
         self.analyze_playground()
         self.generate_path()
