@@ -83,17 +83,19 @@ class BaseSolution:
         
         corners = np.array(markerCorners, np.int32) # Convert markerCorners to a numpy array with type np.int32
 
-        front = None
-
+        orientation = None # N = 0, E = 1, S = 2, W = 3
         if markerCorners != []: # If there are any corners make a bounding polygon
             front = corners[0][0]
             cv2.polylines(image,corners,True,(255,0,0),2)
             vector = [front[0][0]-front[1][0], front[0][1]-front[1][1]]
             vector_perpendicular = [-vector[1],vector[0]]
-            angle = math.atan2(vector_perpendicular[0],vector_perpendicular[1]) * 180 / math.pi
-            print(f"Vector: {vector}, Perpendicular: {vector_perpendicular}, Angle: {angle}")
+            angle = (math.atan2(vector_perpendicular[0],vector_perpendicular[1]) * 180 / math.pi) + 180
+            #orientation = round((angle) / 90)
+            orientation = int((angle + 45) % 360 // 90) # CHATGPT CAME TO THE RESCUE
+            print(f"Vector: {vector}, Perpendicular: {vector_perpendicular}, Angle: {angle}, Orientation {orientation}")
             cv2.line(image, front[0], front[0]-vector, (0,255,0), 10)
             cv2.line(image, front[0], front[0]-vector_perpendicular, (0,0,255), 10)
+            image = cv2.putText(image, f"Angle:{str(round(angle))}, Ori: {orientation}", front[0], cv2.FONT_HERSHEY_DUPLEX, 1, (255,0,0), 1, cv2.LINE_AA)
 
 
         #print(f"Corners: {corners}, IDs: {markerIds}, Main line: {front}") # Was for debug, best to keep it here
@@ -102,7 +104,7 @@ class BaseSolution:
 
         plt.show()
         
-        return corners, image
+        return corners, orientation, image
 
     def recognize_objects(self):
         # Rozpoznani objektu na hristi - cil, body, prekazky
