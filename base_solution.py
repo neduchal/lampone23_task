@@ -21,7 +21,7 @@ class BaseSolution:
         # http://192.168.100.22/image/image.png
         while True:
             try:
-                image = io.imread("https://i.ibb.co/sKp0Z6g/image.png")
+                image = io.imread("http://192.168.100.22/image/image.png")
 
                 break  # Only triggered if input is valid...
             except Exception as error:
@@ -141,11 +141,6 @@ class BaseSolution:
                     shape[i] = erosion(shape[i],square(5)).astype(np.uint8) # Erode the noise away
                     # shape[i] = erosion(cv2.GaussianBlur(shape[i].astype(np.uint8),(7,7),0),square(8)) # Blur and erode the noise away
                 blue, green, red = np.sum(shape[0]), np.sum(shape[1]), np.sum(shape[2])
-                for i in range(3):
-                    prop = measure.regionprops(shape[i])
-                    if len(prop):
-                        print(f"Channel: {i}, Centroid: {prop[0].centroid}, Area: {prop[0].area}")
-                        image_cell = cv2.putText(image_cell, str(prop[0].area), (20,60), cv2.FONT_HERSHEY_DUPLEX, 1, (0,255,0), 1, cv2.LINE_AA)
                 if red > 300 and green > 300 and blue < 300:
                     verdict.append(["red"])
                 elif red > 300 and green < 300 and blue > 300:
@@ -154,14 +149,24 @@ class BaseSolution:
                     verdict.append(["blue"])
                 else:
                     verdict.append(["white"])
+                for i in range(3):
+                    prop = measure.regionprops(shape[i])
+                    if len(prop):
+                        print(f"Channel: {i}, Centroid: {prop[0].centroid}, Area: {prop[0].area}, BBArea: {prop[0].area_bbox}")
+                        if prop[0].area_bbox > 1000 and prop[0].area_bbox < 1400: # temp values
+                            verdict[-1].append("square")
+                            break
                 # image_cell = cv2.putText(image_cell, str(blue), (20,30), cv2.FONT_HERSHEY_DUPLEX, 1, (0,0,255), 1, cv2.LINE_AA)
                 # image_cell = cv2.putText(image_cell, str(green), (20,60), cv2.FONT_HERSHEY_DUPLEX, 1, (0,255,0), 1, cv2.LINE_AA)
                 # image_cell = cv2.putText(image_cell, str(red), (20,90), cv2.FONT_HERSHEY_DUPLEX, 1, (255,0,0), 1, cv2.LINE_AA)
+                if len(verdict[-1])>1:
+                    image_cell = cv2.putText(image_cell, verdict[-1][1], (20,60), cv2.FONT_HERSHEY_DUPLEX, 1, (0,255,0), 1, cv2.LINE_AA)
                 self.render.append([shape[0], "", True])
                 self.render.append([shape[1], "", True])
                 self.render.append([shape[2], "", True])
                 #self.render.append([mask, ""])
                 self.render.append([image_cell, ""])
+        print(verdict)
 
     def analyze_playground(self, robot, cellsize):
         # Analyza dat vytezenych ze snimku
