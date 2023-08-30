@@ -56,8 +56,8 @@ class BaseSolution:
         # Detekce hriste z nacteneho snimku
 
         im_bin = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        im_bin = cv2.medianBlur(im_bin, 5)
-        _, im_bin = cv2.threshold(im_bin, 135, 255, cv2.THRESH_BINARY)
+        im_bin = cv2.medianBlur(im_bin, 7)
+        _, im_bin = cv2.threshold(im_bin, 127, 255, cv2.THRESH_BINARY)
 
         contours, _ = cv2.findContours(im_bin, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
         sorted_contours = sorted(contours, key=cv2.contourArea, reverse=True)
