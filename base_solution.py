@@ -2,7 +2,7 @@ import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 import urllib
-from skimage import transform, data, io
+from skimage import transform, data, io, measure
 from skimage.filters import threshold_otsu
 from skimage.morphology import square, erosion, dilation
 import math
@@ -21,7 +21,7 @@ class BaseSolution:
         # http://192.168.100.22/image/image.png
         while True:
             try:
-                image = io.imread("http://192.168.100.22/image/image.png")
+                image = io.imread("https://i.ibb.co/sKp0Z6g/image.png")
 
                 break  # Only triggered if input is valid...
             except Exception as error:
@@ -138,12 +138,14 @@ class BaseSolution:
                 shape = []
                 for i in range(3):
                     shape.append(np.logical_xor(mask,channels[i])) # XOR the individual channels with the mask
-                    shape[i] = erosion(shape[i],square(5)) # Erode the noise away
+                    shape[i] = erosion(shape[i],square(5)).astype(np.uint8) # Erode the noise away
+                    # shape[i] = erosion(cv2.GaussianBlur(shape[i].astype(np.uint8),(7,7),0),square(8)) # Blur and erode the noise away
                 blue, green, red = np.sum(shape[0]), np.sum(shape[1]), np.sum(shape[2])
-                contours = None
                 for i in range(3):
-                    contours, _ = cv2.findContours(shape[i].astype(np.uint8), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-                    cv2.drawContours(image_cell, contours, -1, (0,255,0), 3)
+                    prop = measure.regionprops(shape[i])
+                    if len(prop):
+                        print(f"Channel: {i}, Centroid: {prop[0].centroid}, Area: {prop[0].area}")
+                        image_cell = cv2.putText(image_cell, str(prop[0].area), (20,60), cv2.FONT_HERSHEY_DUPLEX, 1, (0,255,0), 1, cv2.LINE_AA)
                 if red > 300 and green > 300 and blue < 300:
                     verdict.append(["red"])
                 elif red > 300 and green < 300 and blue > 300:
@@ -152,11 +154,9 @@ class BaseSolution:
                     verdict.append(["blue"])
                 else:
                     verdict.append(["white"])
-                #approx_shape = cv2.approxPolyDP(contours, 0.01 * cv2.arcLength(contours, True), True)
-                image_cell = cv2.putText(image_cell, str(blue), (20,30), cv2.FONT_HERSHEY_DUPLEX, 1, (0,0,255), 1, cv2.LINE_AA)
-                image_cell = cv2.putText(image_cell, str(green), (20,60), cv2.FONT_HERSHEY_DUPLEX, 1, (0,255,0), 1, cv2.LINE_AA)
-                image_cell = cv2.putText(image_cell, str(red), (20,90), cv2.FONT_HERSHEY_DUPLEX, 1, (255,0,0), 1, cv2.LINE_AA)
-                #image_cell = cv2.putText(image_cell, str(len(approx_shape)), (40,60), cv2.FONT_HERSHEY_DUPLEX, 1, (0,0,255), 1, cv2.LINE_AA)
+                # image_cell = cv2.putText(image_cell, str(blue), (20,30), cv2.FONT_HERSHEY_DUPLEX, 1, (0,0,255), 1, cv2.LINE_AA)
+                # image_cell = cv2.putText(image_cell, str(green), (20,60), cv2.FONT_HERSHEY_DUPLEX, 1, (0,255,0), 1, cv2.LINE_AA)
+                # image_cell = cv2.putText(image_cell, str(red), (20,90), cv2.FONT_HERSHEY_DUPLEX, 1, (255,0,0), 1, cv2.LINE_AA)
                 self.render.append([shape[0], "", True])
                 self.render.append([shape[1], "", True])
                 self.render.append([shape[2], "", True])
@@ -168,7 +168,7 @@ class BaseSolution:
         pole = np.array([["" for i in range(8)] for i in range(8)], dtype='|S6')
         rob_pos = (round(robot[0][:, 0].mean()) // cellsize - 1, round(robot[0][:, 1].mean()) // cellsize - 1)
         pole[rob_pos] = f"robot{robot[1]}"
-        print(f"pole={pole}")
+        #print(f"pole={pole}")
         pass
 
     def generate_path(self): 
