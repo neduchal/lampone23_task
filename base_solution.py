@@ -107,7 +107,7 @@ class BaseSolution:
             cv2.polylines(image,corners,True,(255,0,0),2)
             vector = [front[0][0]-front[1][0], front[0][1]-front[1][1]]
             vector_perpendicular = [-vector[1],vector[0]]
-            angle = (math.atan2(vector_perpendicular[0],vector_perpendicular[1]) * 180 / math.pi) + 180
+            angle = ((math.atan2(vector_perpendicular[0],vector_perpendicular[1]) * 180 / math.pi) - 180) * -1
             #orientation = round((angle) / 90)
             orientation = int((angle + 45) % 360 // 90) # CHATGPT CAME TO THE RESCUE
             print(f"Vector: {vector}, Perpendicular: {vector_perpendicular}, Angle: {angle}, Orientation {orientation}")
