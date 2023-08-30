@@ -50,7 +50,6 @@ class BaseSolution:
 
         # Undistort the image using the specified coefficients
         undistorted_image = cv2.undistort(im_res, K, dist_coefs)
-
         return undistorted_image
 
 
@@ -164,9 +163,12 @@ class BaseSolution:
                 #self.render.append([mask, ""])
                 self.render.append([image_cell, ""])
 
-
-    def analyze_playground(self):
+    def analyze_playground(self, robot, cellsize):
         # Analyza dat vytezenych ze snimku
+        pole = np.array([["" for i in range(8)] for i in range(8)], dtype='|S6')
+        rob_pos = (round(robot[0][:, 0].mean()) // cellsize - 1, round(robot[0][:, 1].mean()) // cellsize - 1)
+        pole[rob_pos] = f"robot{robot[1]}"
+        print(f"pole={pole}")
         pass
 
     def generate_path(self): 
@@ -195,9 +197,9 @@ class BaseSolution:
     def solve(self):
         image = self.load_frame()
         fixed_image, leftups, cellsize = self.detect_playground(image)
-        self.detect_robot(fixed_image.copy())
-        self.recognize_objects(fixed_image ,leftups, cellsize)
-        self.analyze_playground()
+        robot = self.detect_robot(fixed_image.copy())
+        self.recognize_objects(fixed_image, leftups, cellsize)
+        self.analyze_playground(robot, cellsize)
         self.generate_path()
         self.send_solution()
         pass
