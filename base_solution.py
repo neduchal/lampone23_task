@@ -4,6 +4,7 @@ import numpy as np
 import urllib
 from skimage import transform, data, io
 from skimage.filters import threshold_otsu
+from skimage.morphology import square, erosion, dilation
 import math
 
 class BaseSolution:
@@ -23,7 +24,7 @@ class BaseSolution:
                 image = io.imread("http://192.168.100.22/image/image.png")
 
                 break  # Only triggered if input is valid...
-            except ValueError as error:
+            except Exception as error:
                 print(error)
 
         im_res = cv2.resize(image, (1920, 1440))
@@ -118,19 +119,35 @@ class BaseSolution:
             cv2.line(image, front[0], front[0]-vector, (0,255,0), 10)
             cv2.line(image, front[0], front[0]-vector_perpendicular, (0,0,255), 10)
             image = cv2.putText(image, f"Angle:{str(round(angle))}, Ori: {orientation}", front[0], cv2.FONT_HERSHEY_DUPLEX, 1, (255,0,0), 1, cv2.LINE_AA)
+            return corners[0][0], orientation
 
         #print(f"Corners: {corners}, IDs: {markerIds}, Main line: {front}") # Was for debug, best to keep it here
         #self.render.append([image, "detect_robot"])
-        return corners[0][0], orientation
 
     def recognize_objects(self, image, leftups, cellsize):
         for line in leftups:
             for cell in line:
-                bottomright = (cell[0]+cellsize,cell[1]+cellsize)
-                image_cell = image[cell[0]:bottomright[0],cell[1]:bottomright[1]]
-                channels = [image_cell[:,:,0]>threshold_otsu(image_cell[:,:,0]),image_cell[:,:,1]>threshold_otsu(image_cell[:,:,1]),image_cell[:,:,2]>threshold_otsu(image_cell[:,:,2])]
-                mask = np.logical_and(channels[0], np.logical_and(channels[1], channels[2]))
-                self.render.append([mask, ""])
+                bottomright = (cell[0]+cellsize,cell[1]+cellsize) # Calculate the coords of the bottom right corner of the cell
+                image_cell = image[cell[0]:bottomright[0],cell[1]:bottomright[1]] # Cut the cell from the image
+                channels = []
+                for i in range(3):
+                    channels.append(image_cell[:,:,i]<threshold_otsu(image_cell[:,:,i])) # Threshold the idividual images and put them in a nicely indexable array
+                for i in range(3):
+                    channels[i] = erosion(channels[i],square(3)) # Erode in all the channels
+                mask = np.logical_and(channels[0], np.logical_and(channels[1], channels[2])) # Logical AND all the channels together to get a mask
+                shape = []
+                for i in range(3):
+                    shape.append(np.logical_xor(mask,channels[i])) # XOR the individual channels with the mask
+                    shape[i] = erosion(shape[i],square(5)) # Erode the noise away
+                image_cell = cv2.putText(image_cell, str(np.sum(shape[0])), (20,30), cv2.FONT_HERSHEY_DUPLEX, 1, (0,0,255), 1, cv2.LINE_AA)
+                image_cell = cv2.putText(image_cell, str(np.sum(shape[1])), (20,60), cv2.FONT_HERSHEY_DUPLEX, 1, (0,255,0), 1, cv2.LINE_AA)
+                image_cell = cv2.putText(image_cell, str(np.sum(shape[2])), (20,90), cv2.FONT_HERSHEY_DUPLEX, 1, (255,0,0), 1, cv2.LINE_AA)
+                self.render.append([shape[0], ""])
+                self.render.append([shape[1], ""])
+                self.render.append([shape[2], ""])
+                #self.render.append([mask, ""])
+                self.render.append([image_cell, ""])
+
 
     def analyze_playground(self):
         # Analyza dat vytezenych ze snimku
