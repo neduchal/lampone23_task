@@ -16,9 +16,10 @@ class BaseSolution:
         # Load the fisheye-distorted image
         # https://i.ibb.co/d7Wgk4B/image.png
         # https://i.ibb.co/sKp0Z6g/image.png
+        # http://192.168.100.22/image/image.png
         while True:
             try:
-                image = io.imread("http://192.168.100.22/image/image.png")
+                image = io.imread("https://i.ibb.co/sKp0Z6g/image.png")
 
                 break  # Only triggered if input is valid...
             except ValueError as error:
@@ -76,14 +77,18 @@ class BaseSolution:
         M = cv2.getPerspectiveTransform(src_pts, dst_pts)
         warp = cv2.warpPerspective(image, M, (1000, 1000))
 
-        centers = np.zeros((8,8))
-        for i, x in enumerate(range(100, 900, 100)):
-            for j, y in enumerate(range(100, 900, 100)):
-                centers[i,j] = (x, y)
+        leftups = np.zeros((8, 8), dtype=tuple)
+        cellsize = 100
+        f, subplt = plt.subplots(8, 8)  # REMOVE AFTER DEBUG!!!!!!!!!!!!!!!!!!
+        for i, x in enumerate(range(cellsize, 9*cellsize, cellsize)):
+            for j, y in enumerate(range(cellsize, 9*cellsize, cellsize)):
+                leftups[i, j] = (x, y)
+                subplt[j, i].imshow(warp[y:y+cellsize, x:x+cellsize])  # REMOVE AFTER DEBUG!!!!!!!!!!!!!!!!!!
 
-        print(centers)
+        print(leftups)  # REMOVE AFTER DEBUG!!!!!!!!!!!!!!!!!!
+        plt.show()  # REMOVE AFTER DEBUG!!!!!!!!!!!!!!!!!!
 
-        return warp
+        return warp, leftups, cellsize
 
     def detect_robot(self, image):
         dictionary = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_50)
