@@ -125,6 +125,7 @@ class BaseSolution:
         #self.render.append([image, "detect_robot"])
 
     def recognize_objects(self, image, leftups, cellsize):
+        verdict = []
         for line in leftups:
             for cell in line:
                 bottomright = (cell[0]+cellsize,cell[1]+cellsize) # Calculate the coords of the bottom right corner of the cell
@@ -139,12 +140,27 @@ class BaseSolution:
                 for i in range(3):
                     shape.append(np.logical_xor(mask,channels[i])) # XOR the individual channels with the mask
                     shape[i] = erosion(shape[i],square(5)) # Erode the noise away
-                image_cell = cv2.putText(image_cell, str(np.sum(shape[0])), (20,30), cv2.FONT_HERSHEY_DUPLEX, 1, (0,0,255), 1, cv2.LINE_AA)
-                image_cell = cv2.putText(image_cell, str(np.sum(shape[1])), (20,60), cv2.FONT_HERSHEY_DUPLEX, 1, (0,255,0), 1, cv2.LINE_AA)
-                image_cell = cv2.putText(image_cell, str(np.sum(shape[2])), (20,90), cv2.FONT_HERSHEY_DUPLEX, 1, (255,0,0), 1, cv2.LINE_AA)
-                self.render.append([shape[0], ""])
-                self.render.append([shape[1], ""])
-                self.render.append([shape[2], ""])
+                blue, green, red = np.sum(shape[0]), np.sum(shape[1]), np.sum(shape[2])
+                contours = None
+                for i in range(3):
+                    contours, _ = cv2.findContours(shape[i].astype(np.uint8), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+                    cv2.drawContours(image_cell, contours, -1, (0,255,0), 3)
+                if red > 300 and green > 300 and blue < 300:
+                    verdict.append(["red"])
+                elif red > 300 and green < 300 and blue > 300:
+                    verdict.append(["green"])
+                elif red < 300 and blue > 300:
+                    verdict.append(["blue"])
+                else:
+                    verdict.append(["white"])
+                #approx_shape = cv2.approxPolyDP(contours, 0.01 * cv2.arcLength(contours, True), True)
+                image_cell = cv2.putText(image_cell, str(blue), (20,30), cv2.FONT_HERSHEY_DUPLEX, 1, (0,0,255), 1, cv2.LINE_AA)
+                image_cell = cv2.putText(image_cell, str(green), (20,60), cv2.FONT_HERSHEY_DUPLEX, 1, (0,255,0), 1, cv2.LINE_AA)
+                image_cell = cv2.putText(image_cell, str(red), (20,90), cv2.FONT_HERSHEY_DUPLEX, 1, (255,0,0), 1, cv2.LINE_AA)
+                #image_cell = cv2.putText(image_cell, str(len(approx_shape)), (40,60), cv2.FONT_HERSHEY_DUPLEX, 1, (0,0,255), 1, cv2.LINE_AA)
+                self.render.append([shape[0], "", True])
+                self.render.append([shape[1], "", True])
+                self.render.append([shape[2], "", True])
                 #self.render.append([mask, ""])
                 self.render.append([image_cell, ""])
 
@@ -166,7 +182,10 @@ class BaseSolution:
             fig.suptitle('Lampone 2023')
             subplot = np.reshape(subplot,x*y)
             for i in range(count):
-                subplot[i].imshow(self.render[i][0])
+                if len(self.render[i]) == 2 or self.render[i][2] == False:
+                    subplot[i].imshow(self.render[i][0])
+                else:
+                    subplot[i].imshow(self.render[i][0],cmap="binary")
                 subplot[i].set_title(self.render[i][1])
                 subplot[i].axis("off")
             plt.show()
