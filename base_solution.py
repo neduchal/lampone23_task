@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import urllib
 from skimage import transform, data, io
+from skimage.filters import threshold_otsu
 import math
 
 class BaseSolution:
@@ -108,7 +109,6 @@ class BaseSolution:
             vector = [front[0][0]-front[1][0], front[0][1]-front[1][1]]
             vector_perpendicular = [-vector[1],vector[0]]
             angle = ((math.atan2(vector_perpendicular[0],vector_perpendicular[1]) * 180 / math.pi) - 180) * -1
-            #orientation = round((angle) / 90)
             orientation = int((angle + 45) % 360 // 90) # CHATGPT CAME TO THE RESCUE
             print(f"Vector: {vector}, Perpendicular: {vector_perpendicular}, Angle: {angle}, Orientation {orientation}")
             cv2.line(image, front[0], front[0]-vector, (0,255,0), 10)
@@ -117,14 +117,16 @@ class BaseSolution:
 
         #print(f"Corners: {corners}, IDs: {markerIds}, Main line: {front}") # Was for debug, best to keep it here
         #self.render.append([image, "detect_robot"])
-        return corners, orientation
+        return corners[0][0], orientation
 
     def recognize_objects(self, image, leftups, cellsize):
         for line in leftups:
             for cell in line:
                 bottomright = (cell[0]+cellsize,cell[1]+cellsize)
                 image_cell = image[cell[0]:bottomright[0],cell[1]:bottomright[1]]
-                self.render.append([image_cell, ""])
+                channels = [image_cell[:,:,0]>threshold_otsu(image_cell[:,:,0]),image_cell[:,:,1]>threshold_otsu(image_cell[:,:,1]),image_cell[:,:,2]>threshold_otsu(image_cell[:,:,2])]
+                mask = np.logical_and(channels[0], np.logical_and(channels[1], channels[2]))
+                self.render.append([mask, ""])
 
     def analyze_playground(self):
         # Analyza dat vytezenych ze snimku
@@ -141,7 +143,6 @@ class BaseSolution:
             y = math.ceil(count/x)
             fig, subplot = plt.subplots(x,y)
             fig.suptitle('Lampone 2023')
-            print(subplot)
             subplot = np.reshape(subplot,x*y)
             for i in range(count):
                 subplot[i].imshow(self.render[i][0])
