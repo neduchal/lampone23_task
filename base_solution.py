@@ -8,6 +8,7 @@ import math
 class BaseSolution:
 
     def __init__(self):
+        self.render = []
         pass
 
     def load_frame(self):
@@ -102,7 +103,7 @@ class BaseSolution:
         corners = np.array(markerCorners, np.int32) # Convert markerCorners to a numpy array with type np.int32
 
         orientation = None # N = 0, E = 1, S = 2, W = 3
-        if markerCorners != []: # If there are any corners make a bounding polygon
+        if len(markerCorners): # If there are any corners make a bounding polygon
             front = corners[0][0]
             cv2.polylines(image,corners,True,(255,0,0),2)
             vector = [front[0][0]-front[1][0], front[0][1]-front[1][1]]
@@ -117,11 +118,7 @@ class BaseSolution:
 
 
         #print(f"Corners: {corners}, IDs: {markerIds}, Main line: {front}") # Was for debug, best to keep it here
-
-        imgplot = plt.imshow(image)
-
-        plt.show()
-        
+        self.render.append([image, "detect_robot"])
         return corners, orientation, image
 
     def recognize_objects(self):
@@ -132,13 +129,25 @@ class BaseSolution:
         # Analyza dat vytezenych ze snimku
         pass
 
-    def generate_path(self):
+    def generate_path(self): 
         # Vygenerovani cesty [L, F, R, B] -- pripadne dalsi kody pro slozitejsi ulohy
         pass
 
     def send_solution(self):
-        # Poslani reseni na server pomoci UTP spojeni.
+        # if len(self.render):
+        #     count = len(self.render)
+        #     x = math.floor(math.sqrt(count))
+        #     fig, subplot = plt.subplots(x,math.ceil(count/x))
+        #     fig.suptitle('Lampone 2023')
+        #     print(subplot)
+        #     subplot = np.reshape(subplot,len(subplot)*len(subplot[0]))
+        #     for i in range(count):
+        #         subplot[i].imshow(self.render[i][0])
+        #         subplot[i].set_title(self.render[i][1])
+        #         subplot[i].axis("off")
+        #     plt.show()
         pass
+        # Poslani reseni na server pomoci UTP spojeni.
 
     def solve(self):
         image = self.load_frame()
