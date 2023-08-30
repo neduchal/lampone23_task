@@ -9,7 +9,6 @@ class BaseSolution:
 
     def __init__(self):
         self.render = []
-        pass
 
     def load_frame(self):
         # Nacteni jednoho snimku ze serveru
@@ -20,7 +19,7 @@ class BaseSolution:
         # http://192.168.100.22/image/image.png
         while True:
             try:
-                image = io.imread("https://i.ibb.co/sKp0Z6g/image.png")
+                image = io.imread("http://192.168.100.22/image/image.png")
 
                 break  # Only triggered if input is valid...
             except ValueError as error:
@@ -80,14 +79,14 @@ class BaseSolution:
 
         leftups = np.zeros((8, 8), dtype=tuple)
         cellsize = 100
-        f, subplt = plt.subplots(8, 8)  # REMOVE AFTER DEBUG!!!!!!!!!!!!!!!!!!
+        #f, subplt = plt.subplots(8, 8)  # REMOVE AFTER DEBUG!!!!!!!!!!!!!!!!!!
         for i, x in enumerate(range(cellsize, 9*cellsize, cellsize)):
             for j, y in enumerate(range(cellsize, 9*cellsize, cellsize)):
                 leftups[i, j] = (x, y)
-                subplt[j, i].imshow(warp[y:y+cellsize, x:x+cellsize])  # REMOVE AFTER DEBUG!!!!!!!!!!!!!!!!!!
+                #subplt[j, i].imshow(warp[y:y+cellsize, x:x+cellsize])  # REMOVE AFTER DEBUG!!!!!!!!!!!!!!!!!!
 
-        print(leftups)  # REMOVE AFTER DEBUG!!!!!!!!!!!!!!!!!!
-        plt.show()  # REMOVE AFTER DEBUG!!!!!!!!!!!!!!!!!!
+        #print(leftups)  # REMOVE AFTER DEBUG!!!!!!!!!!!!!!!!!!
+        #plt.show()  # REMOVE AFTER DEBUG!!!!!!!!!!!!!!!!!!
 
         return warp, leftups, cellsize
 
@@ -116,14 +115,16 @@ class BaseSolution:
             cv2.line(image, front[0], front[0]-vector_perpendicular, (0,0,255), 10)
             image = cv2.putText(image, f"Angle:{str(round(angle))}, Ori: {orientation}", front[0], cv2.FONT_HERSHEY_DUPLEX, 1, (255,0,0), 1, cv2.LINE_AA)
 
-
         #print(f"Corners: {corners}, IDs: {markerIds}, Main line: {front}") # Was for debug, best to keep it here
-        self.render.append([image, "detect_robot"])
-        return corners, orientation, image
+        #self.render.append([image, "detect_robot"])
+        return corners, orientation
 
-    def recognize_objects(self):
-        # Rozpoznani objektu na hristi - cil, body, prekazky
-        pass
+    def recognize_objects(self, image, leftups, cellsize):
+        for line in leftups:
+            for cell in line:
+                bottomright = (cell[0]+cellsize,cell[1]+cellsize)
+                image_cell = image[cell[0]:bottomright[0],cell[1]:bottomright[1]]
+                self.render.append([image_cell, ""])
 
     def analyze_playground(self):
         # Analyza dat vytezenych ze snimku
@@ -134,26 +135,27 @@ class BaseSolution:
         pass
 
     def send_solution(self):
-        # if len(self.render):
-        #     count = len(self.render)
-        #     x = math.floor(math.sqrt(count))
-        #     fig, subplot = plt.subplots(x,math.ceil(count/x))
-        #     fig.suptitle('Lampone 2023')
-        #     print(subplot)
-        #     subplot = np.reshape(subplot,len(subplot)*len(subplot[0]))
-        #     for i in range(count):
-        #         subplot[i].imshow(self.render[i][0])
-        #         subplot[i].set_title(self.render[i][1])
-        #         subplot[i].axis("off")
-        #     plt.show()
+        if len(self.render):
+            count = len(self.render)
+            x = math.floor(math.sqrt(count))
+            y = math.ceil(count/x)
+            fig, subplot = plt.subplots(x,y)
+            fig.suptitle('Lampone 2023')
+            print(subplot)
+            subplot = np.reshape(subplot,x*y)
+            for i in range(count):
+                subplot[i].imshow(self.render[i][0])
+                subplot[i].set_title(self.render[i][1])
+                subplot[i].axis("off")
+            plt.show()
         pass
         # Poslani reseni na server pomoci UTP spojeni.
 
     def solve(self):
         image = self.load_frame()
-        fixed_image = self.detect_playground(image)
-        self.detect_robot(fixed_image)
-        self.recognize_objects()
+        fixed_image, leftups, cellsize = self.detect_playground(image)
+        self.detect_robot(fixed_image.copy())
+        self.recognize_objects(fixed_image ,leftups, cellsize)
         self.analyze_playground()
         self.generate_path()
         self.send_solution()
