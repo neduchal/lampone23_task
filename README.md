@@ -1,5 +1,11 @@
-# lampone23_task
+# lampone23_task - řešení týmu z laborky 2
 Repozitář se základem (kostrou kódů) k řešení v rámci letního robotického kempu Campo Lampone 2023. Účastníci jsou rozděleni do týmů. Každý tým plní úlohu zvlášť jako celek. Sami si pak mezi sebou v týmu rozdělí podúlohy. 
+
+## Requirements
+Všechny balíky potřebné ke spuštění jsou v requirements.txt, v některých případech je ještě potřebné doinstalovat `tkinter` pro matplotlib
+
+Příkaz pro spuštění:
+python `base_solution.py`
 
 ## Popis úlohy
 Pracovním prostorem úlohy je plachta s bílým pozadím a černou mřížku s 8 x 8 buňkami o velikosti 250 x 250 mm s tloušťkou čáry 25 mm. Nad touto plachtou je uchycena kamera tak, aby snímala celou plachtu. Na plachtě jsou rozmístěny objekty, které symbolizují cílový bod a překážky. Na počátku úlohy je na náhodnou buňku mřížky umístěn pohyblivý robot. Cílem úlohy je ovládat robota tak, aby co nejkratší cestou dojel do cílové buňky, aniž by po cestě projel buňkou označenou jako překážka.
