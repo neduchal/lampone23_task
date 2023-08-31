@@ -10,6 +10,7 @@ from skimage import transform, data, io, measure # type: ignore
 from skimage.filters import threshold_otsu
 from skimage.morphology import square, erosion, dilation
 import math
+import socket
 import concurrent.futures
 
 class BaseSolution:
@@ -322,8 +323,9 @@ class BaseSolution:
                 turtle.right(90)
         turtle.mainloop()
 
+        return result
 
-    def send_solution(self):
+    def send_solution(self, instructions: str):
         if len(self.render):
             count = len(self.render)
             x = math.floor(math.sqrt(count))
@@ -339,7 +341,15 @@ class BaseSolution:
                 subplot[i].set_title(self.render[i][1])
                 subplot[i].axis("off")
             plt.show()
-        pass
+        
+        udp_ip = "localhost" # debug only, replace with real address
+        udp_port = 5005
+        msg = str(instructions).encode("ascii")
+
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sock.sendto(msg, (udp_ip, udp_port))
+
+
         # Poslani reseni na server pomoci UTP spojeni.
 
     def solve(self):
@@ -353,10 +363,8 @@ class BaseSolution:
         objects = self.recognize_objects(fixed_image, leftups, cellsize)
         print("analyze playground")
         pole = self.analyze_playground(robot, objects, cellsize)
-        print("generate path")
-        self.generate_path(pole)
-        print("send solution")
-        self.send_solution()
+        print("generate path and send solution")
+        self.send_solution(self.generate_path(pole))
         pass
 
 
