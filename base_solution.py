@@ -6,7 +6,7 @@ import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 import urllib
-from skimage import transform, data, io, measure
+from skimage import transform, data, io, measure # type: ignore
 from skimage.filters import threshold_otsu
 from skimage.morphology import square, erosion, dilation
 import math
@@ -74,7 +74,7 @@ class BaseSolution:
 
         rect = cv2.minAreaRect(sorted_contours[0])
         box = cv2.boxPoints(rect)
-        box = np.intp(box)
+        box = np.intp(box) # type: ignore
         # print(box)
 
         # mask = np.zeros(image.shape)
@@ -114,16 +114,16 @@ class BaseSolution:
         orientation = None # N = 0, E = 1, S = 2, W = 3
         if len(markerCorners): # If there are any corners make a bounding polygon
             front = corners[0][0]
-            cv2.polylines(image,corners,True,(255,0,0),2)
+            cv2.polylines(image,corners,True,(255,0,0),2) # type: ignore
             vector = [front[0][0]-front[1][0], front[0][1]-front[1][1]]
             vector_perpendicular = [-vector[1],vector[0]]
             angle = ((math.atan2(vector_perpendicular[0],vector_perpendicular[1]) * 180 / math.pi) - 180) * -1
             orientation = int((angle + 45) % 360 // 90) # CHATGPT CAME TO THE RESCUE
-            print(f"Vector: {vector}, Perpendicular: {vector_perpendicular}, Angle: {angle}, Orientation {orientation}")
+            #print(f"Vector: {vector}, Perpendicular: {vector_perpendicular}, Angle: {angle}, Orientation {orientation}")
             cv2.line(image, front[0], front[0]-vector, (0,255,0), 10)
             cv2.line(image, front[0], front[0]-vector_perpendicular, (0,0,255), 10)
             image = cv2.putText(image, f"Angle:{str(round(angle))}, Ori: {orientation}", front[0], cv2.FONT_HERSHEY_DUPLEX, 1, (255,0,0), 1, cv2.LINE_AA)
-            # self.render.append([image, "detect_robot"])
+            self.render.append([image, "detect_robot"])
             return corners[0][0], orientation
 
         #print(f"Corners: {corners}, IDs: {markerIds}, Main line: {front}") # Was for debug, best to keep it here
@@ -222,6 +222,32 @@ class BaseSolution:
 
         # end of test inputs
 
+
+        # convert to my format
+        for x in range(0,8):
+            for y in range(0,8):
+                if pole[x][y][0] == 'red' and pole[x][y][1] == 'square':
+                    map[x][y] = e
+                if pole[x][y][0] == 'red' and pole[x][y][1] == 'star':
+                    map[x][y] = +6
+                if pole[x][y][0] == 'blue' and pole[x][y][1] == 'square':
+                    map[x][y] = +3
+                if pole[x][y][0] == 'white' and pole[x][y][1] == '':
+                    map[x][y] = 0
+                if pole[x][y][0] == 'robot':
+                    map[x][y] = 0
+                
+                if pole[x][y][0] == 'robot':
+                    start = (x,y)
+                    start_direction = int(pole[x][y][1])
+                
+                if pole[x][y][0] == 'green' and pole[x][y][1] == 'square':
+                    map[x][y] = 0
+                    finish = (x,y)
+
+
+        # end of making inputs
+
         data = {
             "map": map,
             "start": start,
@@ -232,7 +258,7 @@ class BaseSolution:
             json.dump(data, f)
 
         def run_rust_binary():
-            result = subprocess.run("/home/adam/Desktop/lampone23_task-main/rust/target/release/rust", stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, text=True)
+            result = subprocess.run("/home/adam/Desktop/lampone23_task/rust/target/release/rust", stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, text=True)
             return result
 
         # start measuring time
@@ -269,13 +295,13 @@ class BaseSolution:
         time_end = time.time()
         print("time:", time_end - time_start)
 
-
-        turtle.penup()
-        turtle.forward(start[1]*100-400)
-        turtle.right(90)
-        turtle.forward(start[0]*100-400)
-        turtle.pendown()
-        turtle.turtlesize(3.0,3.0,3.0)
+        # center the turtle, does not currently work
+        # turtle.penup()
+        # turtle.forward(start[1]*100-400)
+        # turtle.right(90)
+        # turtle.forward(start[0]*100-400)
+        # turtle.pendown()
+        # turtle.turtlesize(3.0,3.0,3.0)
 
         if start_direction == 0:
             turtle.setheading(0)
@@ -289,7 +315,7 @@ class BaseSolution:
         # for c in path_to_lrfb(best_path, start_dir=start_direction):
         for c in (result):
             if c == "F":
-                turtle.forward(100)
+                turtle.forward(40)
             if c == "L":
                 turtle.left(90)
             if c == "R":
@@ -317,12 +343,19 @@ class BaseSolution:
         # Poslani reseni na server pomoci UTP spojeni.
 
     def solve(self):
+        print("load frame")
         image = self.load_frame()
+        print("detect playground")
         fixed_image, leftups, cellsize = self.detect_playground(image)
+        print("detect robot")
         robot = self.detect_robot(fixed_image.copy())
+        print("recognize objects")
         objects = self.recognize_objects(fixed_image, leftups, cellsize)
+        print("analyze playground")
         pole = self.analyze_playground(robot, objects, cellsize)
+        print("generate path")
         self.generate_path(pole)
+        print("send solution")
         self.send_solution()
         pass
 

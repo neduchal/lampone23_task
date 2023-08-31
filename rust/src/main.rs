@@ -5,9 +5,9 @@ use std::io::Read;
 use std::time::{Duration, Instant};
 
 
-const TEST_PATHS: i32 = 100_000_000; // Set the desired number of test paths
+const TEST_PATHS: i32 = 5_000_000; // Set the desired number of test paths
 const MAX_STEPS: i32 = 64; // Set the maximum number of steps in a path
-const TIME_TO_RUN_FOR: u128 = 20_000; // number of milliseconds to run for before returing the result
+const TIME_TO_RUN_FOR: u128 = 60_000; // number of milliseconds to run for before returing the result
 
 #[derive(Debug, Serialize, Deserialize)]
 struct Data {
