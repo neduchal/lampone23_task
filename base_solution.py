@@ -260,14 +260,14 @@ class BaseSolution:
             json.dump(data, f)
 
         def run_rust_binary():
-            result = subprocess.run("/home/adam/Desktop/lampone23_task/rust/target/release/rust", stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, text=True)
+            result = subprocess.run("env/rust/target/release/rust", stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, text=True)
             return result
 
         # start measuring time
         time_start = time.time()
 
         # Number of threads
-        num_instances = 16
+        num_instances = 12
 
         best_score = -10000
         best_path = ""
