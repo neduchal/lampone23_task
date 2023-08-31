@@ -1,11 +1,12 @@
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
-import urllib
 from skimage import transform, data, io, measure
 from skimage.filters import threshold_otsu
 from skimage.morphology import square, erosion, dilation
+from PIL import Image, ImageDraw
 import math
+
 
 class BaseSolution:
 
@@ -52,13 +53,12 @@ class BaseSolution:
         undistorted_image = cv2.undistort(im_res, K, dist_coefs)
         return undistorted_image
 
-
     def detect_playground(self, image):
         # Detekce hriste z nacteneho snimku
 
         im_bin = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        im_bin = cv2.GaussianBlur(im_bin, (5,5), 0)
-        im_bin = cv2.adaptiveThreshold(im_bin,255,cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY,201,2)
+        im_bin = cv2.GaussianBlur(im_bin, (5, 5), 0)
+        im_bin = cv2.adaptiveThreshold(im_bin, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 201, 2)
 
         kernel = np.ones((5, 5), np.uint8)
         im_bin = cv2.erode(im_bin, kernel, iterations=10)
@@ -84,78 +84,87 @@ class BaseSolution:
 
         leftups = np.zeros((8, 8), dtype=tuple)
         cellsize = 100
-        #f, subplt = plt.subplots(8, 8)  # REMOVE AFTER DEBUG!!!!!!!!!!!!!!!!!!
-        for i, x in enumerate(range(cellsize, 9*cellsize, cellsize)):
-            for j, y in enumerate(range(cellsize, 9*cellsize, cellsize)):
+        # f, subplt = plt.subplots(8, 8)  # REMOVE AFTER DEBUG!!!!!!!!!!!!!!!!!!
+        for i, x in enumerate(range(cellsize, 9 * cellsize, cellsize)):
+            for j, y in enumerate(range(cellsize, 9 * cellsize, cellsize)):
                 leftups[i, j] = (x, y)
-                #subplt[j, i].imshow(warp[y:y+cellsize, x:x+cellsize])  # REMOVE AFTER DEBUG!!!!!!!!!!!!!!!!!!
+                # subplt[j, i].imshow(warp[y:y+cellsize, x:x+cellsize])  # REMOVE AFTER DEBUG!!!!!!!!!!!!!!!!!!
 
-        #print(leftups)  # REMOVE AFTER DEBUG!!!!!!!!!!!!!!!!!!
-        #plt.show()  # REMOVE AFTER DEBUG!!!!!!!!!!!!!!!!!!
+        # print(leftups)  # REMOVE AFTER DEBUG!!!!!!!!!!!!!!!!!!
+        # plt.show()  # REMOVE AFTER DEBUG!!!!!!!!!!!!!!!!!!
 
         return warp, leftups, cellsize
 
     def detect_robot(self, image):
         dictionary = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_50)
-        parameters =  cv2.aruco.DetectorParameters()
-        detector = cv2.aruco.ArucoDetector(dictionary, parameters) # Prepare the CV2 aruco detector object
+        parameters = cv2.aruco.DetectorParameters()
+        detector = cv2.aruco.ArucoDetector(dictionary, parameters)  # Prepare the CV2 aruco detector object
 
-        image_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY) # Convert a color image to grayscale
+        image_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)  # Convert a color image to grayscale
 
-        markerCorners, markerIds, rejectedCandidates = detector.detectMarkers(image_gray) # Detect the aruco markers from the grayscale image
-        
-        corners = np.array(markerCorners, np.int32) # Convert markerCorners to a numpy array with type np.int32
+        markerCorners, markerIds, rejectedCandidates = detector.detectMarkers(
+            image_gray)  # Detect the aruco markers from the grayscale image
 
-        orientation = None # N = 0, E = 1, S = 2, W = 3
-        if len(markerCorners): # If there are any corners make a bounding polygon
+        corners = np.array(markerCorners, np.int32)  # Convert markerCorners to a numpy array with type np.int32
+
+        orientation = None  # N = 0, E = 1, S = 2, W = 3
+        if len(markerCorners):  # If there are any corners make a bounding polygon
             front = corners[0][0]
-            cv2.polylines(image,corners,True,(255,0,0),2)
-            vector = [front[0][0]-front[1][0], front[0][1]-front[1][1]]
-            vector_perpendicular = [-vector[1],vector[0]]
-            angle = ((math.atan2(vector_perpendicular[0],vector_perpendicular[1]) * 180 / math.pi) - 180) * -1
-            orientation = int((angle + 45) % 360 // 90) # CHATGPT CAME TO THE RESCUE
+            cv2.polylines(image, corners, True, (255, 0, 0), 2)
+            vector = [front[0][0] - front[1][0], front[0][1] - front[1][1]]
+            vector_perpendicular = [-vector[1], vector[0]]
+            angle = ((math.atan2(vector_perpendicular[0], vector_perpendicular[1]) * 180 / math.pi) - 180) * -1
+            orientation = int((angle + 45) % 360 // 90)  # CHATGPT CAME TO THE RESCUE
             print(f"Vector: {vector}, Perpendicular: {vector_perpendicular}, Angle: {angle}, Orientation {orientation}")
-            cv2.line(image, front[0], front[0]-vector, (0,255,0), 10)
-            cv2.line(image, front[0], front[0]-vector_perpendicular, (0,0,255), 10)
-            image = cv2.putText(image, f"Angle:{str(round(angle))}, Ori: {orientation}", front[0], cv2.FONT_HERSHEY_DUPLEX, 1, (255,0,0), 1, cv2.LINE_AA)
+            cv2.line(image, front[0], front[0] - vector, (0, 255, 0), 10)
+            cv2.line(image, front[0], front[0] - vector_perpendicular, (0, 0, 255), 10)
+            image = cv2.putText(image, f"Angle:{str(round(angle))}, Ori: {orientation}", front[0],
+                                cv2.FONT_HERSHEY_DUPLEX, 1, (255, 0, 0), 1, cv2.LINE_AA)
             # self.render.append([image, "detect_robot"])
             return corners[0][0], orientation
 
-        #print(f"Corners: {corners}, IDs: {markerIds}, Main line: {front}") # Was for debug, best to keep it here
+        # print(f"Corners: {corners}, IDs: {markerIds}, Main line: {front}") # Was for debug, best to keep it here
 
     def recognize_objects(self, image, leftups, cellsize):
         verdict = []
         for line in leftups:
             for cell in line:
-                bottomright = (cell[0]+cellsize,cell[1]+cellsize) # Calculate the coords of the bottom right corner of the cell
-                image_cell = image[cell[0]:bottomright[0],cell[1]:bottomright[1]] # Cut the cell from the image
+                bottomright = (
+                    cell[0] + cellsize,
+                    cell[1] + cellsize)  # Calculate the coords of the bottom right corner of the cell
+                image_cell = image[cell[0]:bottomright[0], cell[1]:bottomright[1]]  # Cut the cell from the image
                 channels = []
                 for i in range(3):
-                    channels.append(image_cell[:,:,i]<threshold_otsu(image_cell[:,:,i])) # Threshold the idividual images and put them in a nicely indexable array
-                    channels[i] = erosion(channels[i],square(3)) # Erode in all the channels
-                mask = np.logical_and(channels[0], np.logical_and(channels[1], channels[2])) # Logical AND all the channels together to get a mask
+                    channels.append(image_cell[:, :, i] < threshold_otsu(
+                        image_cell[:, :, i]))  # Threshold the idividual images and put them in a nicely indexable array
+                    channels[i] = erosion(channels[i], square(3))  # Erode in all the channels
+                mask = np.logical_and(channels[0], np.logical_and(channels[1], channels[
+                    2]))  # Logical AND all the channels together to get a mask
                 shape = []
                 for i in range(3):
-                    shape.append(np.logical_xor(mask,channels[i])) # XOR the individual channels with the mask
-                    shape[i] = erosion(shape[i],square(5)) # Erode the noise away
-                blue, green, red = np.sum(shape[0]), np.sum(shape[1]), np.sum(shape[2]) # Count all the pixels in the thresholded channels
+                    shape.append(np.logical_xor(mask, channels[i]))  # XOR the individual channels with the mask
+                    shape[i] = erosion(shape[i], square(5))  # Erode the noise away
+                blue, green, red = np.sum(shape[0]), np.sum(shape[1]), np.sum(
+                    shape[2])  # Count all the pixels in the thresholded channels
                 if red > 300 and green > 300 and blue < 300:
-                    verdict.append(["red",""])
+                    verdict.append(["red", ""])
                 elif red > 300 and green < 300 and blue > 300:
-                    verdict.append(["green",""])
+                    verdict.append(["green", ""])
                 elif red < 300 and blue > 300:
-                    verdict.append(["blue",""])
+                    verdict.append(["blue", ""])
                 else:
-                    verdict.append(["white",""])
+                    verdict.append(["white", ""])
                 contours = None
                 for i in range(3):
-                    contours, _ = cv2.findContours(shape[i].astype(np.uint8), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE) # Find countours
-                    cv2.drawContours(image_cell, contours, -1, (0,255,0), 3) # Draw them so i won't want to kill myself when i debug this shit
+                    contours, _ = cv2.findContours(shape[i].astype(np.uint8), cv2.RETR_TREE,
+                                                   cv2.CHAIN_APPROX_SIMPLE)  # Find countours
+                    cv2.drawContours(image_cell, contours, -1, (0, 255, 0),
+                                     3)  # Draw them so i won't want to kill myself when i debug this shit
                     for contour in contours:
                         length = cv2.arcLength(contour, True)
                         if length > 50:
-                            approx_shape = cv2.approxPolyDP(contour, 0.03 * length, True) # Approx the shape and length
-                            #image_cell = cv2.putText(image_cell, str(len(approx_shape)), (40,20+(20*i)), cv2.FONT_HERSHEY_DUPLEX, 1, (0,0,255), 1, cv2.LINE_AA)
+                            approx_shape = cv2.approxPolyDP(contour, 0.03 * length, True)  # Approx the shape and length
+                            # image_cell = cv2.putText(image_cell, str(len(approx_shape)), (40,20+(20*i)), cv2.FONT_HERSHEY_DUPLEX, 1, (0,0,255), 1, cv2.LINE_AA)
                             if 3 < len(approx_shape) < 6:
                                 verdict[-1][1] = "square"
                             elif 7 < len(approx_shape) < 12:
@@ -169,7 +178,7 @@ class BaseSolution:
                 # self.render.append([shape[2], "", True])
                 # self.render.append([mask, ""])
                 # self.render.append([image_cell, ""])
-        return np.reshape(verdict,(8,8,2))
+        return np.reshape(verdict, (8, 8, 2))
 
     def analyze_playground(self, robot, objects, cellsize):
         # Analyza dat vytezenych ze snimku
@@ -180,23 +189,72 @@ class BaseSolution:
 
         return pole
 
-    def generate_path(self): 
+    def generate_path(self):
         # Vygenerovani cesty [L, F, R, B] -- pripadne dalsi kody pro slozitejsi ulohy
         pass
+
+    def visualize(self, pole):
+        robot = Image.open("assets/robot.png")
+        blue_square = Image.open("assets/blue_square.png")
+        green_square = Image.open("assets/green_square.png")
+        red_square = Image.open("assets/red_square.png")
+        red_star = Image.open("assets/red_star.png")
+
+        rows = len(pole)
+        cols = len(pole[0])
+        cellsize = 100
+
+        final = Image.new("RGB", (cols * cellsize, rows * cellsize), (255, 255, 255))
+        # Draw some lines
+        draw = ImageDraw.Draw(final)
+        y_start = 0
+        y_end = final.height
+
+        x_start = 0
+        x_end = final.width
+
+        # Draw columns:
+        for x in range(0, x_end + 1, cellsize):
+            line = ((x-1, y_start), (x-1, y_end))
+            draw.line(line, fill=(127, 127, 127), width=10)
+
+        # Draw rows:
+        for y in range(0, y_end + 1, cellsize):
+            line = ((x_start, y-1), (x_end, y-1))
+            draw.line(line, fill=(127, 127, 127), width=10)
+
+        del draw
+
+        for j, row in enumerate(pole):
+            for i, cell in enumerate(row):
+                x, y = i * cellsize + 5, j * cellsize + 5
+                if cell[0] == "robot":
+                    rob_tmp = robot.rotate(-90 * int(cell[1]), Image.NEAREST, expand=True)
+                    final.paste(rob_tmp, (x, y), rob_tmp)
+                elif all(cell == ["blue", "square"]):
+                    final.paste(blue_square, (x, y), blue_square)
+                elif all(cell == ["green", "square"]):
+                    final.paste(green_square, (x, y), green_square)
+                elif all(cell == ["red", "square"]):
+                    final.paste(red_square, (x, y), red_square)
+                elif all(cell == ["red", "star"]):
+                    final.paste(red_star, (x, y), red_star)
+
+        self.render.append([final, "lolik", False])
 
     def send_solution(self):
         if len(self.render):
             count = len(self.render)
             x = math.floor(math.sqrt(count))
-            y = math.ceil(count/x)
-            fig, subplot = plt.subplots(x,y)
+            y = math.ceil(count / x)
+            fig, subplot = plt.subplots(x, y)
             fig.suptitle('Lampone 2023')
-            subplot = np.reshape(subplot,x*y)
+            subplot = np.reshape(subplot, x * y)
             for i in range(count):
                 if len(self.render[i]) == 2 or self.render[i][2] == False:
                     subplot[i].imshow(self.render[i][0])
                 else:
-                    subplot[i].imshow(self.render[i][0],cmap="binary")
+                    subplot[i].imshow(self.render[i][0], cmap="binary")
                 subplot[i].set_title(self.render[i][1])
                 subplot[i].axis("off")
             plt.show()
@@ -210,6 +268,7 @@ class BaseSolution:
         objects = self.recognize_objects(fixed_image, leftups, cellsize)
         pole = self.analyze_playground(robot, objects, cellsize)
         self.generate_path()
+        self.visualize(pole)
         self.send_solution()
         pass
 
