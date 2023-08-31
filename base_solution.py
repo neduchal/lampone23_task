@@ -193,12 +193,15 @@ class BaseSolution:
         # Vygenerovani cesty [L, F, R, B] -- pripadne dalsi kody pro slozitejsi ulohy
         pass
 
-    def visualize(self, pole):
+    def visualize(self, pole, path):
         robot = Image.open("assets/robot.png")
         blue_square = Image.open("assets/blue_square.png")
         green_square = Image.open("assets/green_square.png")
         red_square = Image.open("assets/red_square.png")
         red_star = Image.open("assets/red_star.png")
+        arrow = Image.open("assets/arrow.png")
+
+        arr_pos = (0, 0)
 
         rows = len(pole)
         cols = len(pole[0])
@@ -229,8 +232,12 @@ class BaseSolution:
             for i, cell in enumerate(row):
                 x, y = i * cellsize + 5, j * cellsize + 5
                 if cell[0] == "robot":
-                    rob_tmp = robot.rotate(-90 * int(cell[1]), Image.NEAREST, expand=True)
-                    final.paste(rob_tmp, (x, y), rob_tmp)
+                    robot.rotate(-90 * int(cell[1]), Image.NEAREST, expand=True)
+                    final.paste(robot, (x, y), robot)
+
+                    arr_pos = (x, y)
+                    arrow.rotate(-90 * int(cell[1]), Image.NEAREST, expand=True)
+
                 elif all(cell == ["blue", "square"]):
                     final.paste(blue_square, (x, y), blue_square)
                 elif all(cell == ["green", "square"]):
@@ -239,6 +246,10 @@ class BaseSolution:
                     final.paste(red_square, (x, y), red_square)
                 elif all(cell == ["red", "star"]):
                     final.paste(red_star, (x, y), red_star)
+
+        # x, y = robot
+        # for char in path:
+        #     if char = ""
 
         self.render.append([final, "lolik", False])
 
@@ -268,7 +279,7 @@ class BaseSolution:
         objects = self.recognize_objects(fixed_image, leftups, cellsize)
         pole = self.analyze_playground(robot, objects, cellsize)
         self.generate_path()
-        self.visualize(pole)
+        self.visualize(pole, path="FFLFRFFFLLFFRFFFFRFFRFF")
         self.send_solution()
         pass
 
