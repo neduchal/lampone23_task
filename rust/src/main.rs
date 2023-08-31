@@ -88,9 +88,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // start measuring time
     let time = Instant::now();
 
-    let mut file = File::open("data.json")?;
+    let file = File::open("data.json")?;
     let mut contents = String::new();
-    file.read_to_string(&mut contents)?;
+    let mut file_reader = std::io::BufReader::new(file);
+    file_reader.read_to_string(&mut contents)?;
 
     let data: Data = serde_json::from_str(&contents)?;
 

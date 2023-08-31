@@ -193,7 +193,7 @@ class BaseSolution:
             is_number = True
 
             for c in input_str:
-                if c.isnumeric() and is_number:
+                if (c.isnumeric() and is_number) or c=='-':
                     num_chars.append(c)
                 else:
                     is_number = False
@@ -278,15 +278,15 @@ class BaseSolution:
             # Wait for all tasks to complete
             for future in concurrent.futures.as_completed(future_to_instance):
                 instance_id = future_to_instance[future]
-                try:
-                    result = future.result()
-                    print(f"Instance {instance_id} completed with stdout: {result.stdout}")
-                    if best_score < extract_number_and_letters(result.stdout)[0]:
-                        # found new best path
-                        best_score = extract_number_and_letters(result.stdout)[0]
-                        best_path = extract_number_and_letters(result.stdout)[1]
-                except Exception as e:
-                    print(f"Instance {instance_id} raised an exception: {e}")
+                # try:
+                result = future.result()
+                print(f"Instance {instance_id} completed with stdout: {result.stdout}")
+                if best_score < extract_number_and_letters(result.stdout)[0]:
+                    # found new best path
+                    best_score = extract_number_and_letters(result.stdout)[0]
+                    best_path = extract_number_and_letters(result.stdout)[1]
+                # except Exception as e:
+                #     print(f"Instance {instance_id} raised an exception: {e}")
         
         result = best_path
         print("\n\n Best score: " + str(best_score) + ", with the path:\n" + best_path)
