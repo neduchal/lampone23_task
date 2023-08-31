@@ -369,6 +369,7 @@ class BaseSolution:
         pass
 
 
+
 if __name__ == "__main__":
     solution = BaseSolution()
     solution.solve()
