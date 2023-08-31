@@ -1,4 +1,6 @@
 # lampone23_task - řešení týmu z laborky 2
+<h1 align="center">💡1</h1>
+
 Repozitář se základem (kostrou kódů) k řešení v rámci letního robotického kempu Campo Lampone 2023. Účastníci jsou rozděleni do týmů. Každý tým plní úlohu zvlášť jako celek. Sami si pak mezi sebou v týmu rozdělí podúlohy. 
 
 ## Requirements
