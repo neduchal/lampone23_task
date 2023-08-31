@@ -10,6 +10,7 @@ from skimage import transform, data, io, measure # type: ignore
 from skimage.filters import threshold_otsu
 from skimage.morphology import square, erosion, dilation
 import math
+import concurrent.futures
 import socket
 import concurrent.futures
 
