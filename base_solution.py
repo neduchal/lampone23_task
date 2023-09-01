@@ -11,6 +11,8 @@ from skimage.filters import threshold_otsu
 from skimage.morphology import square, erosion, dilation
 import math
 import concurrent.futures
+import socket
+import concurrent.futures
 
 class BaseSolution:
 
@@ -188,21 +190,24 @@ class BaseSolution:
     def generate_path(self, pole):
 
         def extract_number_and_letters(input_str):
-            num_chars = []
-            letter_chars = []
-            is_number = True
+            try:
+                num_chars = []
+                letter_chars = []
+                is_number = True
 
-            for c in input_str:
-                if (c.isnumeric() and is_number) or c=='-':
-                    num_chars.append(c)
-                else:
-                    is_number = False
-                    letter_chars.append(c)
+                for c in input_str:
+                    if (c.isnumeric() and is_number) or c=='-':
+                        num_chars.append(c)
+                    else:
+                        is_number = False
+                        letter_chars.append(c)
 
-            number = int(''.join(num_chars))
-            letters = ''.join(letter_chars)
+                number = int(''.join(num_chars))
+                letters = ''.join(letter_chars)
 
-            return number, letters
+                return number, letters
+            except:
+                return -1000000, ''
 
 
         start = (7,4) # y,x
@@ -258,14 +263,14 @@ class BaseSolution:
             json.dump(data, f)
 
         def run_rust_binary():
-            result = subprocess.run("/home/adam/Desktop/lampone23_task/rust/target/release/rust", stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, text=True)
+            result = subprocess.run("rust/target/release/rust", stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, text=True)
             return result
 
         # start measuring time
         time_start = time.time()
 
         # Number of threads
-        num_instances = 16
+        num_instances = 12
 
         best_score = -10000
         best_path = ""
@@ -278,15 +283,15 @@ class BaseSolution:
             # Wait for all tasks to complete
             for future in concurrent.futures.as_completed(future_to_instance):
                 instance_id = future_to_instance[future]
-                # try:
-                result = future.result()
-                print(f"Instance {instance_id} completed with stdout: {result.stdout}")
-                if best_score < extract_number_and_letters(result.stdout)[0]:
-                    # found new best path
-                    best_score = extract_number_and_letters(result.stdout)[0]
-                    best_path = extract_number_and_letters(result.stdout)[1]
-                # except Exception as e:
-                #     print(f"Instance {instance_id} raised an exception: {e}")
+                try:
+                    result = future.result()
+                    print(f"Instance {instance_id} completed with stdout: {result.stdout}, and stderr: {result.stderr}")
+                    if best_score < extract_number_and_letters(result.stdout)[0]:
+                        # found new best path
+                        best_score = extract_number_and_letters(result.stdout)[0]
+                        best_path = extract_number_and_letters(result.stdout)[1]
+                except Exception as e:
+                    print(f"Instance {instance_id} raised an exception: {e}")
         
         result = best_path
         print("\n\n Best score: " + str(best_score) + ", with the path:\n" + best_path)
@@ -322,8 +327,9 @@ class BaseSolution:
                 turtle.right(90)
         turtle.mainloop()
 
+        return result
 
-    def send_solution(self):
+    def send_solution(self, instructions: str):
         if len(self.render):
             count = len(self.render)
             x = math.floor(math.sqrt(count))
@@ -339,7 +345,15 @@ class BaseSolution:
                 subplot[i].set_title(self.render[i][1])
                 subplot[i].axis("off")
             plt.show()
-        pass
+        
+        udp_ip = "localhost" # debug only, replace with real address
+        udp_port = 5005
+        msg = str(instructions).encode("ascii")
+
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sock.sendto(msg, (udp_ip, udp_port))
+
+
         # Poslani reseni na server pomoci UTP spojeni.
 
     def solve(self):
@@ -353,11 +367,10 @@ class BaseSolution:
         objects = self.recognize_objects(fixed_image, leftups, cellsize)
         print("analyze playground")
         pole = self.analyze_playground(robot, objects, cellsize)
-        print("generate path")
-        self.generate_path(pole)
-        print("send solution")
-        self.send_solution()
+        print("generate path and send solution")
+        self.send_solution(self.generate_path(pole))
         pass
+
 
 
 if __name__ == "__main__":
