@@ -1,5 +1,13 @@
-# lampone23_task
+# lampone23_task - řešení týmu z laborky 2
+<h1 align="center">💡1</h1>
+
 Repozitář se základem (kostrou kódů) k řešení v rámci letního robotického kempu Campo Lampone 2023. Účastníci jsou rozděleni do týmů. Každý tým plní úlohu zvlášť jako celek. Sami si pak mezi sebou v týmu rozdělí podúlohy. 
+
+## Requirements
+Všechny balíky potřebné ke spuštění jsou v requirements.txt, v některých případech je ještě potřebné doinstalovat `tkinter` pro matplotlib
+
+Příkaz pro spuštění:
+python `base_solution.py`
 
 ## Popis úlohy
 Pracovním prostorem úlohy je plachta s bílým pozadím a černou mřížku s 8 x 8 buňkami o velikosti 250 x 250 mm s tloušťkou čáry 25 mm. Nad touto plachtou je uchycena kamera tak, aby snímala celou plachtu. Na plachtě jsou rozmístěny objekty, které symbolizují cílový bod a překážky. Na počátku úlohy je na náhodnou buňku mřížky umístěn pohyblivý robot. Cílem úlohy je ovládat robota tak, aby co nejkratší cestou dojel do cílové buňky, aniž by po cestě projel buňkou označenou jako překážka.
@@ -17,13 +25,13 @@ Celková úloha se dělí na několik podúloh. Tyto podúlohy si členové tým
 Kamera má dostatečné rozlišení tak, aby bylo z obrazu možné detekovat objekty v mřížce. Robot je zeshora osazen ArUCo kódem, který usnadní detekci jeho pozice a natočení. Objekty reprezentující překážku, cíl, ... jsou vyrobeny z tenkého materiálu (papír) s barvou odlišnou pozadí a mřížce. Cílem týmu je odeslat na vyhoodnocovací server posloupnost příkazů, kterými se robot musí řídit aby se dostal do cíle.
 
 # `load_frame()`
-Obraz z kamery je dostupný na našem serveru. Cíem této podúlohy je načíst tento obrázek do požadovaného formátu. 
+Obraz z kamery je dostupný na našem serveru. Cílem této podúlohy je načíst tento obrázek do požadovaného formátu. 
 
 # `detect_playground()`
 V načteném obrázku se detekuje mřížka. Výstupem jsou souřadnice středů buněk mřížky.
 
 # `detect_robot()`
-V načteném obrázku se detekuje robot pomocí ArUCo tagu umístěného na jeho "zádech". Výstupem je souřadnice robota.
+V načteném obrázku se detekuje robot pomocí ArUCo tagu umístěného na jeho "zádech". Výstupem jsou souřadnice robota.
 
 # `recognize_objects()`
 V načteném obrázku se detekují ostatní objekty (mimo robota). Výstupem jsou souřadnice jednotlivých objektů a jejich typ (překážka, cíl, ...)!
@@ -32,7 +40,7 @@ V načteném obrázku se detekují ostatní objekty (mimo robota). Výstupem jso
 Analýza získaných dat z načteného obrázku. Výstupem je graf nebo numpy array, který reprezentuje celkový stav úlohy - kde se nachází robot, překážky, cíl, ...
 
 # `generate_path()`
-Nalezení nejkratší cesty v prostoru reprezentovaným grafem nebo numoy array. Z této cesty poté převod na příkazy pro robota (rovně, rovně, zatoč doleva, rovně, ...).
+Nalezení nejkratší cesty v prostoru reprezentovaným grafem nebo numpy array. Z této cesty poté převod na příkazy pro robota (rovně, rovně, zatoč doleva, rovně, ...).
 
 # `send_solution()`
-Odeslání řešení úlohy na vyhodnocovací server pomocí UTP spojení.
+Odeslání řešení úlohy na vyhodnocovací server pomocí UDP spojení.
